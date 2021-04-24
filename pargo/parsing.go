@@ -59,7 +59,18 @@ func parseMethodParameters(method *ast.Field) (parameters []string) {
 	parameterFields := method.Type.(*ast.FuncType).Params.List
 
 	for _, parameterField := range parameterFields {
-		parameters = append(parameters, parameterField.Type.(*ast.Ident).Name)
+		switch parameterField.Type.(type) {
+		case *ast.ArrayType:
+			parameters = append(parameters, parameterField.Type.(*ast.ArrayType).Elt.(*ast.Ident).Name)
+		case *ast.Ident:
+			parameters = append(parameters, parameterField.Type.(*ast.Ident).Name)
+		case *ast.StarExpr:
+			parameters = append(parameters, parameterField.Type.(*ast.StarExpr).X.(*ast.Ident).Name)
+		case *ast.StructType:
+			parameters = append(parameters, parameterField.Type.(*ast.Ident).Name)
+		default:
+			parameters = append(parameters, parameterField.Type.(*ast.Ident).Name)
+		}
 	}
 	return parameters
 }
@@ -78,7 +89,13 @@ func parseSpecificDeclaration(declaration *ast.GenDecl) {
 
 	typeSpec := spec.(*ast.TypeSpec)
 	expression := typeSpec.Type
-	interfaceType := expression.(*ast.InterfaceType)
 
-	parseInterface(interfaceType)
+	switch expression.(type) {
+	case *ast.InterfaceType:
+		interfaceType := expression.(*ast.InterfaceType)
+		parseInterface(interfaceType)
+	default:
+		break
+	}
+
 }

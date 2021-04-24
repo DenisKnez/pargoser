@@ -5,6 +5,8 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+
+	pargoser "github.com/DenisKnez/pargoser/parser"
 )
 
 type Person struct {
@@ -15,6 +17,93 @@ type Person struct {
 
 //go:generate ../generator/gen
 func main() {
+
+	// structP := structparser.StructParser{
+	// 	PathToFileToParse: "something.go",
+	// }
+
+	// theStructs := structP.GetStruct("DifferentCat")
+
+	// if theStructs == nil {
+	// 	fmt.Println("nil")
+	// } else {
+	// 	getStructs([]*parsers.Struct{theStructs})
+	// }
+
+	//   HERE
+	// par := pargoser.NewParser("something.go")
+	// functions, err := par.GetFunctions()
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// for _, funcc := range functions {
+	// 	fmt.Println(funcc)
+	// }
+
+	//fmt.Println(theFirstComment)
+	//Setup()
+	ParsingFileStuff()
+
+	fmt.Scan()
+}
+
+func getStructs(theStructs []*pargoser.Struct) {
+	for _, theStruct := range theStructs {
+		fmt.Printf("Struct name: %s\n", theStruct.Name)
+		for _, field := range theStruct.Fields {
+			fmt.Printf("\tField name: %s\n", field.Name)
+			fmt.Printf("\tField type: %s\n", field.Type)
+			fmt.Println()
+		}
+	}
+}
+
+func getInterfaces(theInterfaces []*pargoser.Interface) {
+	for _, theInt := range theInterfaces {
+		fmt.Printf("Interface name: %s\n", theInt.Name)
+		for _, method := range theInt.Methods {
+			fmt.Printf("\tMethod name: %s\n", method.Name)
+			fmt.Printf("\t\tParams: ")
+			fmt.Printf(" ")
+			for _, param := range method.Params {
+				fmt.Printf("%s, ", param)
+			}
+			fmt.Println()
+			fmt.Printf("\t\tResults: ")
+			fmt.Printf(" ")
+			for _, result := range method.Results {
+				fmt.Printf("%s, ", result)
+			}
+			fmt.Println()
+			fmt.Println()
+			fmt.Println()
+		}
+	}
+}
+
+func getSingleInterface(theInt *pargoser.Interface) {
+	fmt.Printf("Interface name: %s\n", theInt.Name)
+	for _, method := range theInt.Methods {
+		fmt.Printf("\tMethod name: %s\n", method.Name)
+		fmt.Printf("\t\tParams: ")
+		fmt.Printf(" ")
+		for _, param := range method.Params {
+			fmt.Printf("%s, ", param)
+		}
+		fmt.Println()
+		fmt.Printf("\t\tResults: ")
+		fmt.Printf(" ")
+		for _, result := range method.Results {
+			fmt.Printf("%s, ", result)
+		}
+		fmt.Println()
+		fmt.Println()
+		fmt.Println()
+	}
+}
+
+func Setup() {
 	jason := Person{
 		Name:     "Jason",
 		Lastname: "Pierce",
@@ -39,8 +128,6 @@ func main() {
 	}
 
 	StartParsing(fileSet, file)
-
-	fmt.Scan()
 }
 
 //ParsingFileStuff parsing stuff
@@ -52,7 +139,7 @@ func ParsingFileStuff() (fileSet *token.FileSet, file *ast.File) {
 		panic(err)
 	}
 	//show the ast tree in the terminal
-	//ast.Print(fileSet, file)
+	ast.Print(fileSet, file)
 	//fmt.Println("================================================")
 	return
 }
