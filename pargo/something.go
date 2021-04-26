@@ -17,6 +17,7 @@ const (
 
 // this is one gen decl
 var (
-	three string = "skdfj"
-	four  string = "sddfjso"
+	three int          = 3
+	four  *string      = &ranVariable
+	five  DifferentCat = DifferentCat{}
 )

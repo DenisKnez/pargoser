@@ -9,17 +9,45 @@ const (
 	METHOD               = "method"
 )
 
+type VariableKind string
+
+const (
+	Const VariableKind = "const"
+	Var                = "var"
+)
+
 type Interface struct {
-	CommentGroup *CommentGroup
-	Name         string
-	Methods      []*Method
+	Doc     *CommentGroup
+	Name    string
+	Methods []*Method
+}
+
+type Variable struct {
+	Doc   *CommentGroup
+	Kind  VariableKind
+	Name  string
+	Value string
+}
+
+type Import struct {
+	Doc     *CommentGroup
+	Name    *string
+	Path    string
+	Comment *CommentGroup
+}
+
+type TypeSpec struct {
+	Doc     *CommentGroup
+	Name    *string
+	Type    string
+	Comment *CommentGroup
 }
 
 type Struct struct {
-	CommentGroup *CommentGroup
-	Name         string
-	Fields       []*Field
-	Methods      []*Method
+	Doc     *CommentGroup
+	Name    string
+	Fields  []*Field
+	Methods []*Method
 }
 
 //Field represents different things depending on the type
@@ -27,7 +55,7 @@ type Struct struct {
 // Interface it represents the method list
 // Declaration signature it represents parameters/results
 type Field struct {
-	CommentGroup  *CommentGroup
+	Doc           *CommentGroup
 	Name          string
 	IsTypePointer bool
 	Type          string
@@ -41,21 +69,21 @@ type Receiver struct {
 
 //Method represents a struct or interface method
 type Method struct {
-	CommentGroup *CommentGroup
-	Receiver     *Receiver
-	Name         string
-	Params       []*Parameter
-	Results      []*Result
+	Doc      *CommentGroup
+	Receiver *Receiver
+	Name     string
+	Params   []*Parameter
+	Results  []*Result
 }
 
 //TODO anonimous functions
 
 //Function represents a function
 type Function struct {
-	CommentGroup *CommentGroup
-	Name         string
-	Params       []*Parameter
-	Results      []*Result
+	Doc     *CommentGroup
+	Name    string
+	Params  []*Parameter
+	Results []*Result
 }
 
 //Parameter a variable that is passed into a method/function

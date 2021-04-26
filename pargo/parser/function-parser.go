@@ -46,7 +46,7 @@ func (p *Parser) convertFunctionDeclsIntoFunction(funcDecls []*ast.FuncDecl) (fu
 		if err != nil {
 			return nil, err
 		}
-		theFunc.CommentGroup = commentGroup
+		theFunc.Doc = commentGroup
 		functions = append(functions, theFunc)
 	}
 	return functions, nil

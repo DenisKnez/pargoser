@@ -76,7 +76,7 @@ func (p *Parser) convertInterfaceDeclsIntoInterface(genInterfaceDecls []*ast.Gen
 			return nil, err
 		}
 
-		theInterface.CommentGroup = commentGroup
+		theInterface.Doc = commentGroup
 		interfaces = append(interfaces, theInterface)
 	}
 	return interfaces, nil

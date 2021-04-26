@@ -81,7 +81,7 @@ func (p *Parser) convertFunctionDeclsIntoMethod(funcDecls []*ast.FuncDecl) (meth
 		if err != nil {
 			return nil, err
 		}
-		theMethod.CommentGroup = commentGroup
+		theMethod.Doc = commentGroup
 		methods = append(methods, theMethod)
 	}
 	return methods, nil

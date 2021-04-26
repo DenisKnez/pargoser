@@ -14,6 +14,16 @@ type IParser interface {
 	//Function
 	GetFunction(funcName string) (theFunc *Function, err error)
 	GetFunctions() (funcs []*Function, err error)
+	//Variables
+	GetVariable(variableName string) (theVariable *Variable, err error) //TODO
+	GetVariablesByNames(...string) (variables []*Variable, err error)   //TODO
+	GetVaribles() (variables []*Variable, err error)                    //TODO
+	//Import
+	GetImport(importName string) (theImport *Import, err error) //TODO
+	GetImportsByNames(...string) (types []*TypeSpec, err error) //TODO
+	GetImports() (types []*TypeSpec, err error)                 //TODO
+	//TypeSpec
+	//TODO
 }
 
 //Parser used to parse go files

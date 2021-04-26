@@ -62,7 +62,7 @@ func (p *Parser) convertStructDeclsIntoStruct(file *ast.File, genStructDecls []*
 		if err != nil {
 			return nil, err
 		}
-		theStruct.CommentGroup = commentGroup
+		theStruct.Doc = commentGroup
 		// get struct methods
 		funcDecls := p.ParseFuncDeclarations(file)
 		astMethods := p.parseMethodDecls(funcDecls)
