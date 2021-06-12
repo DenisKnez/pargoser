@@ -143,9 +143,10 @@ func (p *Parser) ParseComments(astDecl ast.Decl) (*CommentGroup, error) {
 	switch astDecl.(type) {
 	case *ast.FuncDecl:
 		astCommentGroup = astDecl.(*ast.FuncDecl).Doc
+		break
 	case *ast.GenDecl:
 		astCommentGroup = astDecl.(*ast.GenDecl).Doc
-
+		break
 	default:
 		return commentGroup, errors.New("declaration type not supported")
 	}

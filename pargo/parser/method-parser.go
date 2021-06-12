@@ -4,34 +4,11 @@ import (
 	"go/ast"
 )
 
-//parseFunctionDeclsByName returns the first gen decl that contains the provided name
-//if none is found returns nil
-// func (p *Parser) parseFunctionDeclsByName(name string, funcDecls []*ast.FuncDecl) *ast.FuncDecl {
-// 	for _, funcDecl := range funcDecls {
-// 		if funcDecl.Recv == nil && funcDecl.Name.Name == name {
-// 			return funcDecl
-// 		}
-// 	}
-// 	return nil
-// }
-
 //parseFunctionDecls returns only method declarations from the provided declarations
 func (p *Parser) parseMethodDecls(funcDecls []*ast.FuncDecl) (funcs []*ast.FuncDecl) {
 	for _, funcDecl := range funcDecls {
 		if funcDecl.Recv != nil {
 			funcs = append(funcs, funcDecl)
-		}
-	}
-	return funcs
-}
-
-//parseFunctionDecls returns only function declarations from the provided declarations
-func (p *Parser) parseMethodDeclsByReceiverName(recieverName string, funcDecls []*ast.FuncDecl) (funcs []*ast.FuncDecl) {
-	for _, funcDecl := range funcDecls {
-		if funcDecl.Recv != nil {
-			if funcDecl.Recv.List[0].Names[0].Name == recieverName {
-				funcs = append(funcs, funcDecl)
-			}
 		}
 	}
 	return funcs

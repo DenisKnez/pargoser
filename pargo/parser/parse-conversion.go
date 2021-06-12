@@ -16,6 +16,7 @@ func (p *Parser) FuncStringConversion(expression ast.Expr) (theFunc string, err 
 	if err != nil {
 		return "", err
 	}
+
 	//TODO improve this to be more readable
 	ExprValues := ""
 	ExprValues += "func("
@@ -28,6 +29,7 @@ func (p *Parser) FuncStringConversion(expression ast.Expr) (theFunc string, err 
 		ExprValues += fmt.Sprintf("%s", result)
 	}
 	ExprValues += fmt.Sprint(")")
+
 	return ExprValues, nil
 }
 

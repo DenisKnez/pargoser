@@ -26,13 +26,9 @@ func (p *Parser) parseValues(specs []ast.Spec) (variables []*ast.ValueSpec) {
 	valueSpecs := []*ast.ValueSpec{}
 
 	for _, spec := range specs {
-		switch spec.(type) {
+		switch specType := spec.(type) {
 		case *ast.ValueSpec:
-			valueSpec, ok := spec.(*ast.ValueSpec)
-			if ok {
-				fmt.Println("it's ok")
-				valueSpecs = append(valueSpecs, valueSpec)
-			}
+			valueSpecs = append(valueSpecs, specType)
 		default:
 			continue
 		}
@@ -41,21 +37,21 @@ func (p *Parser) parseValues(specs []ast.Spec) (variables []*ast.ValueSpec) {
 }
 
 //parseStructDeclsByName returns the first gen decl that contains the provided name
-func (p *Parser) parseValueSpecsByNames(valueSpecs []*ast.ValueSpec, name ...string) *ast.ValueSpec {
-	//loop over all general declarations in the file
-	for _, genDeclaration := range valueSpecs {
-		genDeclarationSpec := genDeclaration.Specs[0].(*ast.TypeSpec)
-		switch genDeclarationSpec.Type.(type) {
-		case *ast.StructType:
-			if genDeclarationSpec.Name.Name == name {
-				return genDeclaration
-			}
-		default:
-			continue
-		}
-	}
-	return nil
-}
+// func (p *Parser) parseValueSpecsByNames(genDeclarations []*ast.GenDecl, name ...string) *ast.ValueSpec {
+// 	//loop over all general declarations in the file
+// 	for _, genDeclaration := range genDeclarations {
+// 		genDeclarationSpec := genDeclaration.Specs[0].(*ast.TypeSpec)
+// 		switch genDeclarationSpec.Type.(type) {
+// 		case *ast.StructType:
+// 			if genDeclarationSpec.Name.Name == name {
+// 				return genDeclaration
+// 			}
+// 		default:
+// 			continue
+// 		}
+// 	}
+// 	return nil
+// }
 
 //ParseImports get 3rd party package imports
 func (p *Parser) parseImports(specs []ast.Spec) (variables []*ast.ImportSpec) {

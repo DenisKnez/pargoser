@@ -15,15 +15,13 @@ type IParser interface {
 	GetFunction(funcName string) (theFunc *Function, err error)
 	GetFunctions() (funcs []*Function, err error)
 	//Variables
-	GetVariable(variableName string) (theVariable *Variable, err error) //TODO
-	GetVariablesByNames(...string) (variables []*Variable, err error)   //TODO
-	GetVaribles() (variables []*Variable, err error)                    //TODO
+	//GetVariable(variableName string) (theVariable *Variable, err error) //TODO
+	//GetVariablesByNames(...string) (variables []*Variable, err error)   //TODO
+	GetVariables() (vars []Variable, err error)
+	GetConstantVariables() (consts []Variable, err error)
 	//Import
-	GetImport(importName string) (theImport *Import, err error) //TODO
-	GetImportsByNames(...string) (types []*TypeSpec, err error) //TODO
-	GetImports() (types []*TypeSpec, err error)                 //TODO
-	//TypeSpec
-	//TODO
+	//GetImports() (types []*TypeSpec, err error)                 //TODO
+	//GetTypes   //TODO
 }
 
 //Parser used to parse go files
@@ -136,4 +134,34 @@ func (p *Parser) GetFunction(funcName string) (theFunc *Function, err error) {
 		return nil, err
 	}
 	return functions[0], nil
+}
+
+//GetVariables gets all the variables
+func (p *Parser) GetVariables() (theVar []Variable, err error) {
+	file, err := p.GetFile(p.fileToParse)
+	if err != nil {
+		return nil, err
+	}
+	genDecls := p.ParseGenDeclarations(file)
+	variableGenDecls := p.parseVariableDecls(genDecls)
+	theVar, err = p.convertGenDeclsIntoVariable(1, variableGenDecls)
+	if err != nil {
+		return nil, err
+	}
+	return theVar, nil
+}
+
+//GetConstantVariables gets all the constant variables
+func (p *Parser) GetConstantVariables() (consts []Variable, err error) {
+	file, err := p.GetFile(p.fileToParse)
+	if err != nil {
+		return nil, err
+	}
+	genDecls := p.ParseGenDeclarations(file)
+	constVariableGenDecls := p.parseConstDecls(genDecls)
+	consts, err = p.convertGenDeclsIntoVariable(0, constVariableGenDecls)
+	if err != nil {
+		return nil, err
+	}
+	return consts, nil
 }

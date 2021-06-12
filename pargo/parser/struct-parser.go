@@ -21,12 +21,6 @@ func (p *Parser) parseStructDeclsByName(name string, genDecls []*ast.GenDecl) *a
 	return nil
 }
 
-// returns the methods from the provided struct
-func (p *Parser) parseStructMethods(receiverName string, funcDecls []*ast.FuncDecl) (funcs []*ast.FuncDecl) {
-	funcs = p.parseMethodDeclsByReceiverName(receiverName, funcDecls)
-	return funcs
-}
-
 // takes in the file and returns only the general declarations with type struct
 func (p *Parser) parseStructDecls(genDeclarations []*ast.GenDecl) (structs []*ast.GenDecl) {
 	genDeclsWithStructType := []*ast.GenDecl{}
