@@ -2,10 +2,15 @@ package parser
 
 import (
 	"errors"
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"os"
+	"regexp"
 )
+
+var goFiles = regexp.MustCompile(".*.go")
 
 //isPointer checks if the methods has a pointer receiver
 func (p *Parser) isPointer(expression ast.Expr) bool {
@@ -59,6 +64,58 @@ func (p *Parser) GetFile(path string) (*ast.File, error) {
 	}
 	p.File = file
 	return file, nil
+}
+
+//GetFiles gets all the files to parse
+func (p *Parser) getFiles(directoryName string) (files []*ast.File, err error) {
+	dirFiles, err := os.ReadDir(directoryName)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, file := range dirFiles {
+		fileWithDirectoryPrefix := fmt.Sprintf("%s/%s", directoryName, file.Name())
+		if file.IsDir() {
+			subDirFiles, err := p.getFiles(fileWithDirectoryPrefix)
+			if err != nil {
+				return nil, err
+			}
+			files = append(files, subDirFiles...)
+		}
+
+		if !goFiles.MatchString(file.Name()) {
+			continue
+		}
+
+		astFile, err := parser.ParseFile(token.NewFileSet(), fileWithDirectoryPrefix, nil, parser.ParseComments|parser.DeclarationErrors)
+		if err != nil {
+			return nil, err
+		}
+
+		files = append(files, astFile)
+	}
+
+	return files, nil
+}
+
+func (p *Parser) ParseFiles(directoryName string) (astFiles []*ast.File, err error) {
+	files, err := p.getFiles(directoryName)
+	if err != nil {
+		return nil, err
+	}
+
+	return files, nil
+}
+
+func (p *Parser) parseProvidedFiles(files []string) (astFiles []*ast.File, err error) {
+	for _, file := range files {
+		astFile, err := parser.ParseFile(token.NewFileSet(), file, nil, parser.ParseComments|parser.DeclarationErrors)
+		if err != nil {
+			return nil, err
+		}
+		astFiles = append(astFiles, astFile)
+	}
+	return astFiles, nil
 }
 
 //ConvertFieldTypeToString convers the provided field into a string representation

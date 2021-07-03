@@ -22,12 +22,13 @@ type IParser interface {
 	//Import
 	//GetImports() (types []*TypeSpec, err error)                 //TODO
 	//GetTypes   //TODO
+	ParseFiles(directoryName string) (astFiles []*ast.File, err error)
 }
 
 //Parser used to parse go files
 type Parser struct {
 	fileToParse string
-	*ast.File
+	astFiles    []*ast.File
 }
 
 func NewParser(fileToParse string) IParser {
