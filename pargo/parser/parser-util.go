@@ -103,7 +103,13 @@ func (p *Parser) ParseFiles(directoryName string) (astFiles []*ast.File, err err
 	if err != nil {
 		return nil, err
 	}
-
+	for _, theFunc := range files {
+		fmt.Println("the f: ", theFunc)
+	}
+	// astFiles, err = p.parseProvidedFiles(files)
+	// if err != nil {
+	// 	return nil, err
+	// }
 	return files, nil
 }
 

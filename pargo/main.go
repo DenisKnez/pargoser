@@ -18,8 +18,7 @@ type Person struct {
 //go:generate ../generator/gen
 func main() {
 
-	thePar := dp.Parser{}
-
+	thePar := dp.NewParser(".")
 	files, err := thePar.ParseFiles(".")
 	if err != nil {
 		fmt.Println("the error: ", err)
