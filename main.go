@@ -6,7 +6,7 @@ import (
 	"go/parser"
 	"go/token"
 
-	dp "github.com/DenisKnez/pargoser/parser"
+	dp "github.com/DenisKnez/pargoser/parser/v0.0.1"
 )
 
 type Person struct {
