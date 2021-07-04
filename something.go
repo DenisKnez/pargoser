@@ -1,4 +1,4 @@
-package main
+package pargoser
 
 type DifferentCat struct {
 }
