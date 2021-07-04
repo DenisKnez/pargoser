@@ -22,7 +22,7 @@ type IParser interface {
 	//Import
 	//GetImports() (types []*TypeSpec, err error)                 //TODO
 	//GetTypes   //TODO
-	ParseFiles(directoryName string) error
+	ParseFiles(directoryName string) ([]string, error)
 }
 
 //Parser used to parse go files
@@ -30,13 +30,13 @@ type Parser struct {
 	astFiles []*ast.File
 }
 
-func NewParser(fileToParse string) (IParser, error) {
-	parser := Parser{}
-	err := parser.ParseFiles(fileToParse)
+func NewParser(fileToParse string) (parsedFiles []string, parser IParser, err error) {
+	par := Parser{}
+	parsedFiles, err = par.ParseFiles(fileToParse)
 	if err != nil {
-		return nil, err
+		return []string{}, nil, err
 	}
-	return &parser, nil
+	return parsedFiles, &par, nil
 }
 
 //GetInterfaces returns all interfaces in the file,

@@ -98,14 +98,16 @@ func (p *Parser) getFiles(directoryName string) (files []*ast.File, err error) {
 	return files, nil
 }
 
-func (p *Parser) ParseFiles(directoryName string) (err error) {
+func (p *Parser) ParseFiles(directoryName string) (fileNames []string, err error) {
 	files, err := p.getFiles(directoryName)
 	if err != nil {
-		return err
+		return []string{}, err
 	}
-
 	p.astFiles = files
-	return nil
+	for _, file := range files {
+		fileNames = append(fileNames, file.Name.Name)
+	}
+	return fileNames, nil
 }
 
 func (p *Parser) parseProvidedFiles(files []string) (astFiles []*ast.File, err error) {
