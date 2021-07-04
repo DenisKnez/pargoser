@@ -25,13 +25,21 @@ func (p *Parser) parseInterfaceDecls(genDeclarations []*ast.GenDecl) (interfaces
 	genDeclsWithInterfaceType := []*ast.GenDecl{}
 	//loop over all general declarations in the file
 	for _, genDeclaration := range genDeclarations {
-		genDeclarationType := genDeclaration.Specs[0].(*ast.TypeSpec).Type
-		switch genDeclarationType.(type) {
-		case *ast.InterfaceType:
-			genDeclsWithInterfaceType = append(genDeclsWithInterfaceType, genDeclaration)
+		genDeclarationSpec := genDeclaration.Specs[0]
+
+		switch genDeclarationSpec.(type) {
+		case *ast.TypeSpec:
+			genDeclarationType := genDeclarationSpec.(*ast.TypeSpec).Type
+			switch genDeclarationType.(type) {
+			case *ast.InterfaceType:
+				genDeclsWithInterfaceType = append(genDeclsWithInterfaceType, genDeclaration)
+			default:
+				continue
+			}
 		default:
 			continue
 		}
+
 	}
 	return genDeclsWithInterfaceType
 }
@@ -42,7 +50,6 @@ func (p *Parser) parseInterfaceMethodName(astField *ast.Field) string {
 	}
 	return astField.Names[0].Name
 }
-
 
 // takes in ast interfaces and returns this libraries representation of interface
 func (p *Parser) convertInterfaceDeclsIntoInterface(genInterfaceDecls []*ast.GenDecl) (
