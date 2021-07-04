@@ -1,0 +1,8 @@
+package main
+{{ range . }}
+type {{ .Name }} struct {
+	{{ range .Fields -}}
+		{{ .Name }} {{ .TypeName }}
+	{{ end }}
+}
+{{ end }}
