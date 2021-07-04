@@ -7,11 +7,18 @@ import (
 func (p *Parser) parseInterfaceDeclsByName(name string, genDecls []*ast.GenDecl) *ast.GenDecl {
 	//loop over all general declarations in the file
 	for _, genDeclaration := range genDecls {
-		genDeclarationSpec := genDeclaration.Specs[0].(*ast.TypeSpec)
-		switch genDeclarationSpec.Type.(type) {
-		case *ast.InterfaceType:
-			if genDeclarationSpec.Name.Name == name {
-				return genDeclaration
+		genDeclarationSpec := genDeclaration.Specs[0]
+
+		switch genDeclarationSpec.(type) {
+		case *ast.TypeSpec:
+			genDeclarationType := genDeclarationSpec.(*ast.TypeSpec).Type
+			switch genDeclarationType.(type) {
+			case *ast.InterfaceType:
+				if genDeclarationSpec.(*ast.TypeSpec).Name.Name == name {
+					return genDeclaration
+				}
+			default:
+				continue
 			}
 		default:
 			continue
