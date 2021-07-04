@@ -1,3 +1,3 @@
-module github.com/DenisKnez/pargoser/v0.0.1
+module github.com/DenisKnez/pargoser
 
 go 1.16
