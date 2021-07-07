@@ -27,9 +27,9 @@ func (p *Parser) ParseFuncDeclarations(file *ast.File) []*ast.FuncDecl {
 	funcDeclarations := []*ast.FuncDecl{}
 	//loop over all declaration in the file
 	for _, declaration := range file.Decls {
-		switch declaration.(type) {
+		switch declType := declaration.(type) {
 		case *ast.FuncDecl:
-			funcDeclarations = append(funcDeclarations, declaration.(*ast.FuncDecl))
+			funcDeclarations = append(funcDeclarations, declType)
 		default:
 			continue
 		}
@@ -42,9 +42,9 @@ func (p *Parser) ParseGenDeclarations(file *ast.File) []*ast.GenDecl {
 	genDeclarations := []*ast.GenDecl{}
 	//loop over all declaration in the file
 	for _, declaration := range file.Decls {
-		switch declaration.(type) {
+		switch declType := declaration.(type) {
 		case *ast.GenDecl:
-			genDeclarations = append(genDeclarations, declaration.(*ast.GenDecl))
+			genDeclarations = append(genDeclarations, declType)
 		default:
 			continue
 		}
@@ -197,16 +197,14 @@ func (p *Parser) ParseResults(astFunc *ast.FuncType) (results []*Result, err err
 
 //ParseComments returns the comments from the provided declaration
 func (p *Parser) ParseComments(astDecl ast.Decl) (*CommentGroup, error) {
-	astCommentGroup := &ast.CommentGroup{}
+	var astCommentGroup *ast.CommentGroup
 	commentGroup := &CommentGroup{}
 
-	switch astDecl.(type) {
+	switch astDecl := astDecl.(type) {
 	case *ast.FuncDecl:
-		astCommentGroup = astDecl.(*ast.FuncDecl).Doc
-		break
+		astCommentGroup = astDecl.Doc
 	case *ast.GenDecl:
-		astCommentGroup = astDecl.(*ast.GenDecl).Doc
-		break
+		astCommentGroup = astDecl.Doc
 	default:
 		return commentGroup, errors.New("declaration type not supported")
 	}

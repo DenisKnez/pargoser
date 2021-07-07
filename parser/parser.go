@@ -66,7 +66,6 @@ func (p *Parser) GetInterface(name string) (theInterface *Interface, err error) 
 			return nil, nil
 		}
 		ids := []*ast.GenDecl{interfaceDecl}
-		interfaces := []*Interface{}
 		fileInterfaces, err := p.convertInterfaceDeclsIntoInterface(ids)
 		if err != nil {
 			return nil, err
@@ -74,6 +73,9 @@ func (p *Parser) GetInterface(name string) (theInterface *Interface, err error) 
 		interfaces = append(interfaces, fileInterfaces...)
 	}
 
+	if len(interfaces) == 0 {
+		return nil, nil
+	}
 	return interfaces[0], nil
 }
 

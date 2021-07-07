@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"go/ast"
 )
 
@@ -58,13 +57,9 @@ func (p *Parser) parseImports(specs []ast.Spec) (variables []*ast.ImportSpec) {
 	importSpecs := []*ast.ImportSpec{}
 
 	for _, spec := range specs {
-		switch spec.(type) {
+		switch specType := spec.(type) {
 		case *ast.ImportSpec:
-			importSpec, ok := spec.(*ast.ImportSpec)
-			if ok {
-				fmt.Println("it's ok")
-				importSpecs = append(importSpecs, importSpec)
-			}
+			importSpecs = append(importSpecs, specType)
 		default:
 			continue
 		}
@@ -77,13 +72,9 @@ func (p *Parser) parseTypeSpecs(specs []ast.Spec) (variables []*ast.TypeSpec) {
 	typeSpecs := []*ast.TypeSpec{}
 
 	for _, spec := range specs {
-		switch spec.(type) {
+		switch specType := spec.(type) {
 		case *ast.TypeSpec:
-			typeSpec, ok := spec.(*ast.TypeSpec)
-			if ok {
-				fmt.Println("it's ok")
-				typeSpecs = append(typeSpecs, typeSpec)
-			}
+			typeSpecs = append(typeSpecs, specType)
 		default:
 			continue
 		}
