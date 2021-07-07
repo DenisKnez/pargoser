@@ -46,12 +46,6 @@ func (p *Parser) StarStringConversion(expression ast.Expr) string {
 	return fmt.Sprintf("*%s", name)
 }
 
-//StarArrayStringConversion converts a star(aka pointer) array expression into a strig representation of the star array
-// func (p *Parser) StarArrayStringConversion(expression ast.Expr) string {
-// 	// TODO:
-// 	return ""
-// }
-
 //ArrayStringConversion converts an array expression into a string representation of the array
 func (p *Parser) ArrayStringConversion(expression ast.Expr) string {
 	var formatedName string
