@@ -47,15 +47,24 @@ func (p *Parser) StarStringConversion(expression ast.Expr) string {
 }
 
 //StarArrayStringConversion converts a star(aka pointer) array expression into a strig representation of the star array
-func (p *Parser) StarArrayStringConversion(expression ast.Expr) string {
-	// TODO:
-	return ""
-}
+// func (p *Parser) StarArrayStringConversion(expression ast.Expr) string {
+// 	// TODO:
+// 	return ""
+// }
 
 //ArrayStringConversion converts an array expression into a string representation of the array
 func (p *Parser) ArrayStringConversion(expression ast.Expr) string {
-	name := expression.(*ast.ArrayType).Elt.(*ast.Ident).Name
-	return fmt.Sprintf("[]%s", name)
+	var formatedName string
+	arrayType := expression.(*ast.ArrayType).Elt
+	switch arrayType := arrayType.(type) {
+	case *ast.Ident:
+		name := arrayType.Name
+		formatedName = fmt.Sprintf("[]%s", name)
+	case *ast.StarExpr:
+		name := arrayType.X.(*ast.Ident).Name
+		formatedName = fmt.Sprintf("[]*%s", name)
+	}
+	return formatedName
 }
 
 //IdentityStringConversion converts an identity expression into a string representation of the identity
