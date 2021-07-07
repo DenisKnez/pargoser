@@ -26,13 +26,17 @@ func (p *Parser) parseStructDecls(genDeclarations []*ast.GenDecl) (structs []*as
 	genDeclsWithStructType := []*ast.GenDecl{}
 	//loop over all general declarations in the file
 	for _, genDeclaration := range genDeclarations {
-		genDeclarationType := genDeclaration.Specs[0].(*ast.TypeSpec).Type
-		switch genDeclarationType.(type) {
-		case *ast.StructType:
-			genDeclsWithStructType = append(genDeclsWithStructType, genDeclaration)
-		default:
-			continue
+		genDeclarationTypeSpec := genDeclaration.Specs[0]
+		switch typeSpec := genDeclarationTypeSpec.(type) {
+		case *ast.TypeSpec:
+			switch typeSpec.Type.(type) {
+			case *ast.StructType:
+				genDeclsWithStructType = append(genDeclsWithStructType, genDeclaration)
+			default:
+				continue
+			}
 		}
+
 	}
 	return genDeclsWithStructType
 }
