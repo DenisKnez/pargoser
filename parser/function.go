@@ -4,9 +4,20 @@ import (
 	"go/ast"
 )
 
+func getFunctions(file parserGoFile) (functions []*Function, err error) {
+	funcDecls := parseFuncDeclarations(file)
+	astFunctions := parseFunctionDecls(funcDecls)
+	fileFunctions, err := convertFunctionDeclsIntoFunction(astFunctions)
+	if err != nil {
+		return nil, err
+	}
+	functions = append(functions, fileFunctions...)
+	return functions, nil
+}
+
 //parseFunctionDeclsByName returns the first gen decl that contains the provided name
 //if none is found returns nil
-func (p *Parser) parseFunctionDeclsByName(name string, funcDecls []*ast.FuncDecl) *ast.FuncDecl {
+func parseFunctionDeclsByName(name string, funcDecls []*ast.FuncDecl) *ast.FuncDecl {
 	for _, funcDecl := range funcDecls {
 		if funcDecl.Recv == nil && funcDecl.Name.Name == name {
 			return funcDecl
@@ -16,7 +27,7 @@ func (p *Parser) parseFunctionDeclsByName(name string, funcDecls []*ast.FuncDecl
 }
 
 //parseFunctionDecls returns only function declarations from the provided declarations
-func (p *Parser) parseFunctionDecls(funcDecls []*ast.FuncDecl) (funcs []*ast.FuncDecl) {
+func parseFunctionDecls(funcDecls []*ast.FuncDecl) (funcs []*ast.FuncDecl) {
 	for _, funcDecl := range funcDecls {
 		if funcDecl.Recv == nil {
 			funcs = append(funcs, funcDecl)
@@ -25,24 +36,24 @@ func (p *Parser) parseFunctionDecls(funcDecls []*ast.FuncDecl) (funcs []*ast.Fun
 	return funcs
 }
 
-func (p *Parser) convertFunctionDeclsIntoFunction(funcDecls []*ast.FuncDecl) (functions []*Function, err error) {
+func convertFunctionDeclsIntoFunction(funcDecls []*ast.FuncDecl) (functions []*Function, err error) {
 	for _, funcDecl := range funcDecls {
 		theFunc := &Function{}
 		theFunc.Name = funcDecl.Name.Name
 
-		results, err := p.ParseResults(funcDecl.Type)
+		results, err := parseResults(funcDecl.Type)
 		if err != nil {
 			return nil, err
 		}
 		theFunc.Results = results
-		params, err := p.ParseParameters(funcDecl.Type)
+		params, err := parseParameters(funcDecl.Type)
 		if err != nil {
 			return nil, err
 		}
 		theFunc.Params = params
 
 		// get comments
-		commentGroup, err := p.ParseComments(funcDecl)
+		commentGroup, err := parseComments(funcDecl)
 		if err != nil {
 			return nil, err
 		}

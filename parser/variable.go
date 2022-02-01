@@ -1,12 +1,25 @@
 package parser
 
 import (
+	"errors"
 	"go/ast"
 	"go/token"
 )
 
+func getVariables(file parserGoFile) (variables []Variable, err error) {
+	genDecls := parseGenDeclarations(file)
+	variableGenDecls := parseVariableDecls(genDecls)
+	theVars, err := convertGenDeclsIntoVariable(1, variableGenDecls)
+	if err != nil {
+		return nil, err
+	}
+	variables = append(variables, theVars...)
+
+	return variables, nil
+}
+
 //parseFunctionDecls returns only variable declarations from the provided declarations
-func (p *Parser) parseVariableDecls(genDecls []*ast.GenDecl) (valueSpecs []*ast.GenDecl) {
+func parseVariableDecls(genDecls []*ast.GenDecl) (valueSpecs []*ast.GenDecl) {
 	for _, genDecl := range genDecls {
 		switch genDecl.Tok {
 		case token.VAR:
@@ -17,7 +30,7 @@ func (p *Parser) parseVariableDecls(genDecls []*ast.GenDecl) (valueSpecs []*ast.
 }
 
 //parseConstDecls returns only const variable declarations from the provided declarations
-func (p *Parser) parseConstDecls(genDecls []*ast.GenDecl) (valueSpecs []*ast.GenDecl) {
+func parseConstDecls(genDecls []*ast.GenDecl) (valueSpecs []*ast.GenDecl) {
 	for _, genDecl := range genDecls {
 		switch genDecl.Tok {
 		case token.CONST:
@@ -29,9 +42,9 @@ func (p *Parser) parseConstDecls(genDecls []*ast.GenDecl) (valueSpecs []*ast.Gen
 
 //singleSpecVariableDeclarationConversion this is when there is just a single
 // variable per var keyword
-func (p *Parser) singleSpecVariableDeclarationConversion(kind VariableKind, genDecl *ast.GenDecl) (variables []Variable, err error) {
+func singleSpecVariableDeclarationConversion(kind VariableKind, genDecl *ast.GenDecl) (variables []Variable, err error) {
 	variable := Variable{}
-	commentGroup, err := p.ParseComments(genDecl)
+	commentGroup, err := parseComments(genDecl)
 	if err != nil {
 		return variables, err
 	}
@@ -51,7 +64,7 @@ func (p *Parser) singleSpecVariableDeclarationConversion(kind VariableKind, genD
 		case (*ast.CompositeLit):
 			variable.Value = &genDecl.Specs[0].(*ast.ValueSpec).Values[0].(*ast.CompositeLit).Type.(*ast.Ident).Name
 		default:
-			panic("unsupported type: convertGenDeclsIntoVariable")
+			return nil, errors.New("unsuppored variable type")
 		}
 	}
 	variables = append(variables, variable)
@@ -60,7 +73,7 @@ func (p *Parser) singleSpecVariableDeclarationConversion(kind VariableKind, genD
 
 //multiSpecVariableDeclarationConversion this takes care of the scenario
 // where there is multiple variables inside a single var keyword
-func (p *Parser) multiSpecVariableDeclarationConversion(kind VariableKind, genDecl *ast.GenDecl) (variables []Variable, err error) {
+func multiSpecVariableDeclarationConversion(kind VariableKind, genDecl *ast.GenDecl) (variables []Variable, err error) {
 	for _, spec := range genDecl.Specs {
 		variable := Variable{}
 		commentGroup, err := parseSpecComments(spec)
@@ -91,16 +104,16 @@ func (p *Parser) multiSpecVariableDeclarationConversion(kind VariableKind, genDe
 	return variables, nil
 }
 
-func (p *Parser) convertGenDeclsIntoVariable(kind VariableKind, genDecls []*ast.GenDecl) (variables []Variable, err error) {
+func convertGenDeclsIntoVariable(kind VariableKind, genDecls []*ast.GenDecl) (variables []Variable, err error) {
 	for _, genDecl := range genDecls {
 		if len(genDecl.Specs) == 1 {
-			vars, err := p.singleSpecVariableDeclarationConversion(kind, genDecl)
+			vars, err := singleSpecVariableDeclarationConversion(kind, genDecl)
 			if err != nil {
 				return variables, nil
 			}
 			variables = append(variables, vars...)
 		} else {
-			vars, err := p.multiSpecVariableDeclarationConversion(kind, genDecl)
+			vars, err := multiSpecVariableDeclarationConversion(kind, genDecl)
 			if err != nil {
 				return variables, err
 			}

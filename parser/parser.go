@@ -1,10 +1,15 @@
 package parser
 
 import (
+	"fmt"
 	"go/ast"
 )
 
 type IParser interface {
+	// Get all packages, and the package contains all the other declarations inside it
+	GetPackages() ([]Package, error)
+	// Get everything inside the package that matches the provided name
+	// GetPackage(packageName string)
 	//Interface
 	GetInterfaces() (interfaces []*Interface, err error)
 	GetInterface(name string) (theInterface *Interface, err error)
@@ -20,36 +25,100 @@ type IParser interface {
 	GetVariables() (vars []Variable, err error)
 	GetConstantVariables() (consts []Variable, err error)
 	//Import
-	//GetImports() (types []*TypeSpec, err error)                 //TODO
+	GetImports() (types []*Import, err error) //TODO
+
 	//GetTypes   //TODO
-	ParseFiles(directoryName string) ([]string, error)
+	// example:  type Something string
+	// parseFiles(directoryName string) ([]*GoFile, error)
 }
 
 //Parser used to parse go files
 type Parser struct {
-	astFiles []*ast.File
+	packages []*parserPackage
+	// files              []*parserGoFile
 }
+
+// parser needs to read one package at a time
 
 func NewParser(fileToParse string) (parsedFiles []string, parser IParser, err error) {
 	par := Parser{}
-	parsedFiles, err = par.ParseFiles(fileToParse)
+	par.packages, err = parsePackages(".")
 	if err != nil {
-		return []string{}, nil, err
+		return parsedFiles, parser, err
 	}
+
 	return parsedFiles, &par, nil
+}
+
+func (p *Parser) GetPackages() (packages []Package, err error) {
+	for _, parserPkg := range p.packages {
+		pkg := Package{}
+		pkg.Name = getPackageName(*parserPkg.GoFiles[0])
+		pkg.DirectoryPath = parserPkg.DirectoryPath
+
+		for _, parserGoFile := range parserPkg.GoFiles {
+			// STRUCT
+			structs, err := getStructs(*parserGoFile)
+			if err != nil {
+				return nil, err
+			}
+
+			// VARIABLES
+			variables, err := getVariables(*parserGoFile)
+			if err != nil {
+				return nil, err
+			}
+
+			// FUNCTIONS
+			functions, err := getFunctions(*parserGoFile)
+			if err != nil {
+				return nil, err
+			}
+
+			// INTERFACES
+			interfaces, err := getInterfaces(*parserGoFile)
+			if err != nil {
+				return nil, err
+			}
+
+			// IMPORTS
+			imports := getImports(*parserGoFile)
+
+			pkg.Files = append(pkg.Files, GoFile{
+				Imports:    imports,
+				Structs:    structs,
+				Variables:  variables,
+				Functions:  functions,
+				Interfaces: interfaces,
+			})
+		}
+		packages = append(packages, pkg)
+
+	}
+
+	return packages, nil
+}
+
+func (p *Parser) GetImports() (imports []*Import, err error) {
+	goFiles := getAllGoFilesFromAllPackages(p.packages)
+	for _, goFile := range goFiles {
+		imports = append(imports, getImports(goFile)...)
+	}
+
+	return imports, nil
 }
 
 //GetInterfaces returns all interfaces in the file,
 //returns nil if there is not interfaces in the file
 func (p *Parser) GetInterfaces() (interfaces []*Interface, err error) {
-	for _, astFile := range p.astFiles {
-		genDeclarations := p.ParseGenDeclarations(astFile)
-		genInterfaceDeclarations := p.parseInterfaceDecls(genDeclarations)
-		fileInterfaces, err := p.convertInterfaceDeclsIntoInterface(genInterfaceDeclarations)
+	goFiles := getAllGoFilesFromAllPackages(p.packages)
+	for _, goFile := range goFiles {
+		i, err := getInterfaces(goFile)
 		if err != nil {
 			return nil, err
 		}
-		interfaces = append(interfaces, fileInterfaces...)
+
+		interfaces = append(interfaces, i...)
 	}
 
 	return interfaces, nil
@@ -59,14 +128,15 @@ func (p *Parser) GetInterfaces() (interfaces []*Interface, err error) {
 //returns nil if the interface does not exist
 func (p *Parser) GetInterface(name string) (theInterface *Interface, err error) {
 	interfaces := []*Interface{}
-	for _, astFile := range p.astFiles {
-		genDeclarations := p.ParseGenDeclarations(astFile)
-		interfaceDecl := p.parseInterfaceDeclsByName(name, genDeclarations)
+	goFiles := getAllGoFilesFromAllPackages(p.packages)
+	for _, goFile := range goFiles {
+		genDeclarations := parseGenDeclarations(goFile)
+		interfaceDecl := parseInterfaceDeclsByName(name, genDeclarations)
 		if interfaceDecl == nil {
-			return nil, nil
+			continue
 		}
 		ids := []*ast.GenDecl{interfaceDecl}
-		fileInterfaces, err := p.convertInterfaceDeclsIntoInterface(ids)
+		fileInterfaces, err := convertInterfaceDeclsIntoInterface(ids)
 		if err != nil {
 			return nil, err
 		}
@@ -82,18 +152,25 @@ func (p *Parser) GetInterface(name string) (theInterface *Interface, err error) 
 //GetStruct gets the first struct that has the provided name, if no struct is found returns nil
 func (p *Parser) GetStruct(structName string) (theStruct *Struct, err error) {
 	structs := []*Struct{}
-	for _, astFile := range p.astFiles {
-		genDecls := p.ParseGenDeclarations(astFile)
-		structDecls := p.parseStructDeclsByName(structName, genDecls)
+	goFiles := getAllGoFilesFromAllPackages(p.packages)
+	for _, goFile := range goFiles {
+		genDecls := parseGenDeclarations(goFile)
+		fmt.Println("amount: ", len(genDecls))
+		structDecls := parseStructDeclsByName(structName, genDecls)
 		if structDecls == nil {
-			return nil, nil
+			continue
 		}
+
 		ids := []*ast.GenDecl{structDecls}
-		fileStructs, err := p.convertStructDeclsIntoStruct(astFile, ids)
+		fileStructs, err := convertStructDeclsIntoStruct(goFile, ids)
 		if err != nil {
 			return nil, err
 		}
 		structs = append(structs, fileStructs...)
+	}
+
+	if len(structs) == 0 {
+		return nil, nil
 	}
 
 	return structs[0], nil
@@ -101,40 +178,40 @@ func (p *Parser) GetStruct(structName string) (theStruct *Struct, err error) {
 
 //GetStructs get all the structs
 func (p *Parser) GetStructs() (structs []*Struct, err error) {
-	for _, astFile := range p.astFiles {
-		genDecls := p.ParseGenDeclarations(astFile)
-		structDecls := p.parseStructDecls(genDecls)
-		structStructs, err := p.convertStructDeclsIntoStruct(astFile, structDecls)
+	goFiles := getAllGoFilesFromAllPackages(p.packages)
+	for _, goFile := range goFiles {
+		s, err := getStructs(goFile)
 		if err != nil {
 			return nil, err
 		}
-		structs = append(structs, structStructs...)
+
+		structs = append(structs, s...)
 	}
 	return structs, nil
 }
 
 //GetFunctions get all the functions
 func (p *Parser) GetFunctions() (functions []*Function, err error) {
-	for _, astFile := range p.astFiles {
-		funcDecls := p.ParseFuncDeclarations(astFile)
-		astFunctions := p.parseFunctionDecls(funcDecls)
-		fileFunctions, err := p.convertFunctionDeclsIntoFunction(astFunctions)
+	goFiles := getAllGoFilesFromAllPackages(p.packages)
+	for _, goFile := range goFiles {
+		funcs, err := getFunctions(goFile)
 		if err != nil {
 			return nil, err
 		}
-		functions = append(functions, fileFunctions...)
+		functions = append(functions, funcs...)
 	}
 	return functions, nil
 }
 
-//GetFunction get the function with the provided name
+// GetFunction gets the first occurance of the function with the provided name
 func (p *Parser) GetFunction(funcName string) (theFunc *Function, err error) {
 	funcs := []*Function{}
-	for _, astFile := range p.astFiles {
-		funcDecls := p.ParseFuncDeclarations(astFile)
-		astFunction := p.parseFunctionDeclsByName(funcName, funcDecls)
+	goFiles := getAllGoFilesFromAllPackages(p.packages)
+	for _, goFile := range goFiles {
+		funcDecls := parseFuncDeclarations(goFile)
+		astFunction := parseFunctionDeclsByName(funcName, funcDecls)
 		ids := []*ast.FuncDecl{astFunction}
-		fileFunctions, err := p.convertFunctionDeclsIntoFunction(ids)
+		fileFunctions, err := convertFunctionDeclsIntoFunction(ids)
 		if err != nil {
 			return nil, err
 		}
@@ -145,24 +222,26 @@ func (p *Parser) GetFunction(funcName string) (theFunc *Function, err error) {
 
 //GetVariables gets all the variables
 func (p *Parser) GetVariables() (variables []Variable, err error) {
-	for _, astFile := range p.astFiles {
-		genDecls := p.ParseGenDeclarations(astFile)
-		variableGenDecls := p.parseVariableDecls(genDecls)
-		theVars, err := p.convertGenDeclsIntoVariable(1, variableGenDecls)
+	goFiles := getAllGoFilesFromAllPackages(p.packages)
+
+	for _, goFile := range goFiles {
+		vars, err := getVariables(goFile)
 		if err != nil {
 			return nil, err
 		}
-		variables = append(variables, theVars...)
+
+		variables = append(variables, vars...)
 	}
 	return variables, nil
 }
 
 //GetConstantVariables gets all the constant variables
 func (p *Parser) GetConstantVariables() (consts []Variable, err error) {
-	for _, astFile := range p.astFiles {
-		genDecls := p.ParseGenDeclarations(astFile)
-		constVariableGenDecls := p.parseConstDecls(genDecls)
-		fileConsts, err := p.convertGenDeclsIntoVariable(0, constVariableGenDecls)
+	goFiles := getAllGoFilesFromAllPackages(p.packages)
+	for _, goFile := range goFiles {
+		genDecls := parseGenDeclarations(goFile)
+		constVariableGenDecls := parseConstDecls(genDecls)
+		fileConsts, err := convertGenDeclsIntoVariable(0, constVariableGenDecls)
 		if err != nil {
 			return nil, err
 		}

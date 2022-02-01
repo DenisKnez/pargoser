@@ -4,7 +4,18 @@ import (
 	"go/ast"
 )
 
-func (p *Parser) parseInterfaceDeclsByName(name string, genDecls []*ast.GenDecl) *ast.GenDecl {
+func getInterfaces(file parserGoFile) (interfaces []*Interface, err error) {
+	genDeclarations := parseGenDeclarations(file)
+	genInterfaceDeclarations := parseInterfaceDecls(genDeclarations)
+	fileInterfaces, err := convertInterfaceDeclsIntoInterface(genInterfaceDeclarations)
+	if err != nil {
+		return nil, err
+	}
+	interfaces = append(interfaces, fileInterfaces...)
+	return interfaces, nil
+}
+
+func parseInterfaceDeclsByName(name string, genDecls []*ast.GenDecl) *ast.GenDecl {
 	//loop over all general declarations in the file
 	for _, genDeclaration := range genDecls {
 		genDeclarationSpec := genDeclaration.Specs[0]
@@ -27,8 +38,20 @@ func (p *Parser) parseInterfaceDeclsByName(name string, genDecls []*ast.GenDecl)
 	return nil
 }
 
+func parseInterfaceByPackage(file parserGoFile) (interfaces []*Interface, err error) {
+	genDeclarations := parseGenDeclarations(file)
+	genInterfaceDeclarations := parseInterfaceDecls(genDeclarations)
+	fileInterfaces, err := convertInterfaceDeclsIntoInterface(genInterfaceDeclarations)
+	if err != nil {
+		return nil, err
+	}
+	interfaces = append(interfaces, fileInterfaces...)
+
+	return interfaces, nil
+}
+
 // Takes in general declarations and returns only the general declarations with type interface
-func (p *Parser) parseInterfaceDecls(genDeclarations []*ast.GenDecl) (interfaces []*ast.GenDecl) {
+func parseInterfaceDecls(genDeclarations []*ast.GenDecl) (interfaces []*ast.GenDecl) {
 	genDeclsWithInterfaceType := []*ast.GenDecl{}
 	//loop over all general declarations in the file
 	for _, genDeclaration := range genDeclarations {
@@ -51,7 +74,7 @@ func (p *Parser) parseInterfaceDecls(genDeclarations []*ast.GenDecl) (interfaces
 	return genDeclsWithInterfaceType
 }
 
-func (p *Parser) parseInterfaceMethodName(astField *ast.Field) string {
+func parseInterfaceMethodName(astField *ast.Field) string {
 	if astField.Names == nil {
 		return ""
 	}
@@ -59,7 +82,7 @@ func (p *Parser) parseInterfaceMethodName(astField *ast.Field) string {
 }
 
 // takes in ast interfaces and returns this libraries representation of interface
-func (p *Parser) convertInterfaceDeclsIntoInterface(genInterfaceDecls []*ast.GenDecl) (
+func convertInterfaceDeclsIntoInterface(genInterfaceDecls []*ast.GenDecl) (
 	interfaces []*Interface, err error) {
 
 	for _, genInterfaceDecl := range genInterfaceDecls {
@@ -70,22 +93,22 @@ func (p *Parser) convertInterfaceDeclsIntoInterface(genInterfaceDecls []*ast.Gen
 		for _, method := range genDeclSpec.Type.(*ast.InterfaceType).Methods.List {
 			interfaceMethod := &Method{}
 
-			params, err := p.ParseParameters(method.Type.(*ast.FuncType))
+			params, err := parseParameters(method.Type.(*ast.FuncType))
 			if err != nil {
 				return nil, err
 			}
-			results, err := p.ParseResults(method.Type.(*ast.FuncType))
+			results, err := parseResults(method.Type.(*ast.FuncType))
 			if err != nil {
 				return nil, err
 			}
 
 			interfaceMethod.Params = append(interfaceMethod.Params, params...)
 			interfaceMethod.Results = append(interfaceMethod.Results, results...)
-			interfaceMethod.Name = p.parseInterfaceMethodName(method)
+			interfaceMethod.Name = parseInterfaceMethodName(method)
 			theInterface.Methods = append(theInterface.Methods, interfaceMethod)
 		}
 
-		commentGroup, err := p.ParseComments(genInterfaceDecl)
+		commentGroup, err := parseComments(genInterfaceDecl)
 		if err != nil {
 			return nil, err
 		}
